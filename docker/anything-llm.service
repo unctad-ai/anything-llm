@@ -1,0 +1,26 @@
+[Unit]
+Description=AI Assistant Service
+Requires=docker.service
+After=docker.service network-online.target
+
+[Service]
+Type=simple
+User=ansible
+Group=docker
+
+# Set the working directory to where your docker-compose files are located
+WorkingDirectory=/opt/anything-llm/docker
+
+# Command to start the application
+# Make sure docker-compose is in the system's PATH or provide the full path
+ExecStart=/usr/local/bin/docker-compose up
+
+# Command to stop the application
+ExecStop=/usr/local/bin/docker-compose down
+
+# Restart policy
+Restart=always
+RestartSec=20s
+
+[Install]
+WantedBy=multi-user.target
