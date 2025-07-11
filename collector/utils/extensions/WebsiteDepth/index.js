@@ -9,6 +9,14 @@ const { tokenizeString } = require("../../tokenizer");
 const path = require("path");
 const fs = require("fs");
 
+// Helper function to determine if a URL likely points to HTML content.
+function isHtmlLink(url) {
+  // Regex for disallowed file types. The /i flag ensures case insensitivity,
+  // so it will match .PNG, .png, .Pdf, etc.
+  const disallowedExtensions = /\.(png|jpe?g|gif|svg|pdf|doc|docx|xls|xlsx|zip|mp3)(\?.*)?$/i;
+  return !disallowedExtensions.test(url);
+}
+
 async function discoverLinks(startUrl, maxDepth = 1, maxLinks = 20) {
   const baseUrl = new URL(startUrl);
   const discoveredLinks = new Set([startUrl]);
@@ -27,7 +35,14 @@ async function discoverLinks(startUrl, maxDepth = 1, maxLinks = 20) {
         const newLinks = await getPageLinks(currentUrl, baseUrl);
 
         for (const link of newLinks) {
-          if (!discoveredLinks.has(link) && discoveredLinks.size < maxLinks) {
+          /*if (!discoveredLinks.has(link) && discoveredLinks.size < maxLinks) {
+            discoveredLinks.add(link);
+            if (urlDepth + 1 < maxDepth) {
+              nextQueue.push([link, urlDepth + 1]);
+            }
+          }*/
+          // Only add links that seem to lead to HTML content.
+          if (!discoveredLinks.has(link) && discoveredLinks.size < maxLinks && isHtmlLink(link)) {
             discoveredLinks.add(link);
             if (urlDepth + 1 < maxDepth) {
               nextQueue.push([link, urlDepth + 1]);
@@ -67,7 +82,7 @@ function extractLinks(html, baseUrl) {
 
   for (const link of links) {
     const href = link.getAttribute("href");
-    if (href) {
+    /*if (href) {
       const absoluteUrl = new URL(href, baseUrl.href).href;
       if (
         absoluteUrl.startsWith(
@@ -75,6 +90,23 @@ function extractLinks(html, baseUrl) {
         )
       ) {
         extractedLinks.add(absoluteUrl);
+      }
+    }*/
+    // Proceed only if an href exists and it passes the HTML filter.
+    if (href && isHtmlLink(href)) {
+      try {
+        const absoluteUrl = new URL(href, baseUrl.href).href;
+        // This filter can be adjusted. It currently restricts to the base directory.
+        if (
+          absoluteUrl.startsWith(
+            baseUrl.origin + baseUrl.pathname.split("/").slice(0, -1).join("/")
+          )
+        ) {
+          extractedLinks.add(absoluteUrl);
+        }
+      } catch (error) {
+        // Skip malformed URLs
+        continue;
       }
     }
   }
