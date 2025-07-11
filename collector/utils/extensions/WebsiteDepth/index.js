@@ -13,7 +13,7 @@ const fs = require("fs");
 function isHtmlLink(url) {
   // Regex for disallowed file types. The /i flag ensures case insensitivity,
   // so it will match .PNG, .png, .Pdf, etc.
-  const disallowedExtensions = /\.(png|jpe?g|gif|svg|pdf|doc|docx|xls|xlsx|zip|mp3)(\?.*)?$/i;
+  const disallowedExtensions = /\.(png|jpe?g|gif|svg|pdf|doc|docx|xls|xlsx|zip|mp3|rtf)(\?.*)?$/i;
   return !disallowedExtensions.test(url);
 }
 
